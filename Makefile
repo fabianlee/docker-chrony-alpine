@@ -6,7 +6,8 @@ EXPOSEDPORT := 123:123
 
 # linux capabilities
 CAPS= --cap-add SYS_TIME --cap-add SYS_NICE
-# --cap-add CAP_SYS_RESOURCE
+# --cap-add CAP_SYS_RESOURCE (not needed)
+
 # chrony config file
 VOL_FLAG= -v $(shell pwd)/chrony.conf:/etc/chrony/chrony.conf:ro
 

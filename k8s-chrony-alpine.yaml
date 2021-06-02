@@ -49,11 +49,20 @@ spec:
         - name: FOO
           value: bar
 
+        # linux capabilities needed for setting time
+        securityContext:
+          capabilities:
+            add:
+            - SYS_TIME
+            - SYS_NICE
+
         # check for lifetime liveness, restarts if dead
         livenessProbe:
           exec:
             command:
-            - cat
+            - /bin/sh
+            - -c
+            - /usr/bin/chronyc dump | grep 200
           initialDelaySeconds: 5
           periodSeconds: 10
 
@@ -62,10 +71,15 @@ spec:
           exec:
             command:
             - cat
+            - /etc/chrony/chrony.conf
+            #- /bin/sh
+            #- -c
+            #- /usr/bin/chronyc dumpc | grep 200
           initialDelaySeconds: 3
           periodSeconds: 3
 
       restartPolicy: Always
+      dnsPolicy: ClusterFirst
 ---
 apiVersion: v1
 kind: Service

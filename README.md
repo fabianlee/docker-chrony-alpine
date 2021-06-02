@@ -3,6 +3,8 @@ Docker image that runs chrony daemon NTP server on port 123/udp
 
 Image is based on alpine and is ~ 8Mb
 
+https://hub.docker.com/r/fabianlee/docker-chrony-alpine
+
 # Prerequisites
 * docker
 * make utility (sudo apt-get install make)

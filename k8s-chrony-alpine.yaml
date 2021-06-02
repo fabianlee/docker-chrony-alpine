@@ -1,0 +1,86 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chrony-alpine
+  # allow for override: kubectl -n <ns> apply ...
+  #namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: chrony-alpine
+  # kubectl scale --replicas=x deployment/chrony-alpine
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: chrony-alpine
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+
+      # scaled up deployment will go to different nodes
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - chrony-alpine
+            topologyKey: "kubernetes.io/hostname"
+
+      containers:
+      - name: chrony-alpine
+        image: fabianlee/docker-chrony-alpine:1.0.0
+
+        # resource limits
+        resources:
+          requests:
+            memory: "24Mi"
+            cpu: "500m" # half vcpu
+          limits:
+            memory: "64Mi"
+            cpu: "1000m" # one vcpu
+
+        env:
+        # currently no env vars used for this container
+        - name: FOO
+          value: bar
+
+        # check for lifetime liveness, restarts if dead
+        livenessProbe:
+          exec:
+            command:
+            - cat
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+        # check for initial readiness
+        readinessProbe:
+          exec:
+            command:
+            - cat
+          initialDelaySeconds: 3
+          periodSeconds: 3
+
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chrony-alpine-service
+  #namespace: default
+  labels:
+    app: chrony-alpine
+spec:
+  ports:
+  # port=available to other containers
+  - port: 123
+    name: ntp
+    # targetPort=exposed from inside container
+    targetPort: 123
+    protocol: UDP
+  selector:
+    app: chrony-alpine

@@ -1,3 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chrony-configmap
+data:
+  chrony.conf: |
+    # from configmap
+    pool time.google.com iburst maxsources 2
+    makestep 0.1 4
+    allow 0.0.0.0/0
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -31,6 +41,14 @@ spec:
                 - chrony-alpine
             topologyKey: "kubernetes.io/hostname"
 
+      volumes:
+        - name: config-volume
+          configMap:
+            name: chrony-configmap
+          #items:
+          #- key: chrony.conf
+          #  path: keys
+
       containers:
       - name: chrony-alpine
         image: fabianlee/docker-chrony-alpine:1.0.0
@@ -48,6 +66,10 @@ spec:
         # currently no env vars used for this container
         - name: FOO
           value: bar
+
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/chrony
 
         # linux capabilities needed for setting time
         securityContext:

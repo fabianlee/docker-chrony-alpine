@@ -37,7 +37,7 @@ docker-run-fg: docker-ntp-port-clear
 docker-debug:
 	$(DOCKERCMD) run -it --rm --entrypoint "/bin/sh" $(OPV)
 
-## run container in background
+## run container in background, override /etc/chrony/chrony.conf using volume (not mandatory)
 docker-run-bg: docker-ntp-port-clear
 	$(DOCKERCMD) run -d --network host $(CAPS) -p $(EXPOSEDPORT) $(VOL_FLAG) --rm --name $(PROJECT) $(OPV)
 
@@ -66,6 +66,8 @@ test:
 ## pushes to kubernetes cluster
 k8s-apply:
 	sed -e 's/1.0.0/$(VERSION)/' k8s-chrony-alpine.yaml | kubectl apply -f -
+	@echo ""
+	@echo "Use this debian slim container as a test client: https://github.com/fabianlee/docker-debian-bullseye-slim-ntpclient/blob/main/k8s-debian-slim.yaml"
 
 k8s-delete:
 	kubectl delete -f k8s-chrony-alpine.yaml
